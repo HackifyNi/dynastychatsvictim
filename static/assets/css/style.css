@@ -1548,3 +1548,11 @@ section {
   font-size: 13px;
   color: #fff;
 }
+.carousel-logo {
+  display: block;
+  margin: 0 auto; 
+  max-width: 200px; 
+  margin-bottom: 20px;
+  border-radius: 8%;
+}
+
