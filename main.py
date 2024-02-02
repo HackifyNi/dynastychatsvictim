@@ -30,11 +30,18 @@ def signup():
 
         cursor = conn.cursor()
 
-        # Using parameterized query to prevent SQL injection
-        sql = "INSERT INTO users (fname, lname, dob, username, password) VALUES (%s, %s, %s, %s, %s)"
+        cursor.execute(f"INSERT INTO `users` (fname, lname, dob, username, password) VALUES ('{fname}', '{lname}', '{dob}', '{username}', '{password}')")
+        cursor.close()
+        conn.commit()
+        
+
+       
 
         
 
     return render_template('signup.html')
 
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
