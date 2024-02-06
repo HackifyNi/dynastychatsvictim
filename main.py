@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 import pymysql
 import pymysql.cursors
 
@@ -13,10 +13,10 @@ conn = pymysql.connect(
     cursorclass=pymysql.cursors.DictCursor
 )
 
-
 @app.route('/')
 def index():
     return render_template('landing.html.jinja')
+
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -34,14 +34,30 @@ def signup():
         cursor.close()
         conn.commit()
         
-
-       
-
-        
+        return redirect(url_for('login'))
 
     return render_template('signup.html')
 
 
-@app.route('/login')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM `users` WHERE username='{username}'")
+        user = cursor.fetchone()
+        if user and user['password'] == password:
+            return redirect('/feed')
+        else:
+            error= "Invalid username or password. Please try again."
+            return render_template('login.html', error=error)
+
     return render_template('login.html')
+
+@app.route('/feed')
+def feed():
+    return "Hello World"
+
+
