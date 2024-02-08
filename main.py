@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import flask_login
 import pymysql
 import pymysql.cursors
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -22,6 +23,22 @@ class User:
     def get_id(self):
         return str(self.id)
     
+    
+class User(flask_login.UserMixin):
+    def __init__(self, user_id, username, pfp):
+        self.id = user_id
+        self.username = username
+        self.pfp = pfp
+
+    def get_id(self):
+        return str(self.id)
+
+    def get_posts(self):
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM `Posts` WHERE `user_id` = {self.id}")
+        posts = cursor.fetchall()
+        cursor.close()
+        return posts
 
         
 
@@ -49,6 +66,8 @@ def load_user(user_id):
 
 @app.route('/')
 def index():
+    if flask_login.current_user.is_authenticated:
+        return redirect('/feed')
     return render_template('landing.html.jinja')
 
 
@@ -69,7 +88,10 @@ def signup():
         conn.commit()
 
         
-        return redirect(url_for('login'))
+        return redirect('/login')
+    if flask_login.current_user.is_authenticated:
+        return redirect('/feed')
+   
 
     return render_template('signup.html')
 
@@ -90,12 +112,34 @@ def login():
         else:
             error= "Invalid username or password. Please try again."
             return render_template('login.html', error=error)
+    if flask_login.current_user.is_authenticated:
+        return redirect('/feed')
+    
     return render_template('login.html')
 
 
-@app.route('/feed')
+
+@app.route('/feed', methods=['GET', 'POST'])
 @flask_login.login_required
 def post_feed():
-    return "Hello World"
+    if request.method == 'POST':
+        user_id = flask_login.current_user.id
+        likes = 0  
+        description = request.form['description']
+        image = request.form['image'] 
+        timestamp = datetime.now()
+
+        cursor = conn.cursor()
+        cursor.execute(
+            f"INSERT INTO `Posts` (user_id, likes, description, image, timestamp) "
+            f"VALUES ({user_id}, {likes}, '{description}', '{image}', '{timestamp}')"
+        )
+        cursor.close()
+        conn.commit()
+
+
+    user_posts = flask_login.current_user.get_posts()
+    return render_template('feed.html.jinja', posts=user_posts)
+
 
 
