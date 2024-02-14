@@ -35,9 +35,7 @@ class User(flask_login.UserMixin):
 
     def get_posts(self):
         cursor = conn.cursor()
-        cursor.execute(f"SELECT Posts.*, users.username as username FROM `Posts` "
-                       f"JOIN `users` ON Posts.user_id = users.id "
-                       f"WHERE Posts.user_id = {self.id}")
+        cursor.execute(f"SELECT Posts.*, users.username as username FROM `Posts`")
         posts = cursor.fetchall()
         cursor.close()
         return posts
@@ -140,7 +138,7 @@ def post_feed():
         conn.commit()
 
     cursor = conn.cursor()
-    cursor.execute("SELECT * from `Posts` ORDER BY `timestamp`")
+    cursor.execute("SELECT * from `Posts` JOIN `users` ON Posts.user_id = users.id ORDER BY `timestamp`")
     result = cursor.fetchall()
     return render_template('feed.html.jinja', posts=result)
 
