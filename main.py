@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, g
 import flask_login
 import pymysql
 import pymysql.cursors
 from datetime import datetime
+
 
 app = Flask(__name__)
 
@@ -34,32 +35,43 @@ class User(flask_login.UserMixin):
         return str(self.id)
 
     def get_posts(self):
-        cursor = conn.cursor()
+        cursor = get_db().cursor()
         cursor.execute(f"SELECT Posts.*, users.username as username FROM `Posts`")
         posts = cursor.fetchall()
         cursor.close()
         return posts
 
         
+def connect_db():
+    return pymysql.connect(
+        host="10.100.33.60",
+        user="cjohn",
+        password="224257683",
+        database="cjohn_dynasty",
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=True
+    )
 
+def get_db():
+    '''Opens a new database connection per request.'''        
+    if not hasattr(g, 'db'):
+        g.db = connect_db()
+    return g.db    
 
-conn = pymysql.connect(
-    host='10.100.33.60',
-    user='cjohn',
-    password='224257683',
-    database='cjohn_dynasty',
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor
-)
+@app.teardown_appcontext
+def close_db(error):
+    '''Closes the database connection at the end of request.'''    
+    if hasattr(g, 'db'):
+        g.db.close() 
 
 @login_manager.user_loader
 
 def load_user(user_id):
-    cursor = conn.cursor()
+    cursor = get_db().cursor()
     cursor.execute('SELECT * FROM `users` WHERE `id` = ' + str(user_id))
     result = cursor.fetchone()
     cursor.close()
-    conn.commit()
+    get_db().commit()
     if result is None:
         return None
     return User(result["id"],result["pfp"],result["username"])
@@ -81,11 +93,11 @@ def signup():
         username = request.form['username']
         password = request.form['password']
 
-        cursor = conn.cursor()
+        cursor = get_db().cursor()
 
         cursor.execute(f"INSERT INTO `users` (fname, lname, dob, username, password) VALUES ('{fname}', '{lname}', '{dob}', '{username}', '{password}')")
         cursor.close()
-        conn.commit()
+        get_db().commit()
 
         
         return redirect('/login')
@@ -102,7 +114,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        cursor = conn.cursor()
+        cursor = get_db().cursor()
         cursor.execute(f"SELECT * FROM `users` WHERE username='{username}'")
         result = cursor.fetchone()
         if result and result['password'] == password:
@@ -129,26 +141,21 @@ def post_feed():
         image = request.form['image'] 
         timestamp = datetime.now()
 
-        cursor = conn.cursor()
+        cursor = get_db().cursor()
         cursor.execute(
             f"INSERT INTO `Posts` (user_id, likes, description, image, timestamp) "
             f"VALUES ({user_id}, {likes}, '{description}', '{image}', '{timestamp}')"
         )
         cursor.close()
-        conn.commit()
+        get_db().commit()
 
-    cursor = conn.cursor()
-    cursor.execute("SELECT * from `Posts` JOIN `users` ON Posts.user_id = users.id ORDER BY `timestamp`")
+    cursor = get_db().cursor()
+    cursor.execute("SELECT * from `Posts` JOIN `users` ON Posts.user_id = users.id ORDER BY `timestamp` DESC")
     result = cursor.fetchall()
     return render_template('feed.html.jinja', posts=result)
 
 
 
-@app.route('/debug_posts')
-@flask_login.login_required
-def debug_posts():
-    user_posts = flask_login.current_user.get_posts()
-    print(user_posts)   
-    return render_template('debug_posts.html.jinja', posts=user_posts)
+
 
 
