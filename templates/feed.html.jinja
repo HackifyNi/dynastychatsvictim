@@ -311,16 +311,16 @@
                             <h5 class="mb-3 card-title">About <small><a href="#" class="ml-1">Edit</a></small></h5>
 
                             <p class="card-text"> <i class="fas fa-calendar-week mr-2"></i> Went to <a href="#"
-                                    class="text-decoration-none">oh canada</a></p>
+                                    class="text-decoration-none">New York</a></p>
 
                             <p class="card-text"> <i class="fas fa-user-friends mr-2"></i> Become a friend with <a
-                                    href="#" class="text-decoration-none">obama</a></p>
-                            <p class="card-text"> <i class="far fa-building mr-2"></i> Work at <a href="#"
+                                    href="#" class="text-decoration-none">Me</a></p>
+                            <p class="card-text"> <i class="far fa-building mr-2"></i> Work at <a href="https://github.com/theylovecjawn"
                                     class="text-decoration-none">Github</a></p>
                             <p class="card-text"> <i class="fas fa-home mr-2"></i> Live in <a href="#"
-                                    class="text-decoration-none">San francisco</a></p>
+                                    class="text-decoration-none">New York</a></p>
                             <p class="card-text"> <i class="fas fa-map-marker mr-2"></i> From <a href="#"
-                                    class="text-decoration-none">Seattle, WA</a></p>
+                                    class="text-decoration-none">Grenada, GA</a></p>
 
 
 
@@ -430,7 +430,7 @@
 
                             <div class="card-body">
                                 <form method="POST" action="{{ url_for('post_feed') }}" class="form-inline">
-                                    <input type="text" name="description" id="description" placeholder="Description"
+                                    <input type="text" name="description" id="description" placeholder="Message"
                                         class="form-control form-control-md">
                                     <input type="text" name="image" id="image" placeholder="Image URL"
                                         class="form-control form-control-md" style="width:40%">
@@ -441,8 +441,10 @@
 
                                 {% for post in posts %}
                                 <div class="post">
-                                    <p><strong>{{ post.username }}</strong>: {{ post.description }}</p>
+                                    <p><strong>@{{ post.username }}</strong>: {{ post.description }}</p>
+                                    {%if post.image %}
                                     <img src="{{ post.image }}" alt="Post Image" class="img-fluid">
+                                    {% endif %}
                                     <p>{{ post.timestamp }}</p>
                                 </div>
                                 <hr>
